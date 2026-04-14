@@ -1,0 +1,27 @@
+{
+  "skill_name": "ecommerce-customer-workflow",
+  "version": "0.2.0",
+  "description": "京东客服离线工作流 MVP",
+  "platform": "jd",
+  "default_data_sources": {
+    "catalog": "shops/default/products.csv",
+    "faq": "shops/default/faq.md",
+    "rules": "shops/default/rules.md"
+  },
+  "supported_product_ref_types": ["sku", "product_id", "url"],
+  "supported_source_types": ["text", "url", "image"],
+  "features": {
+    "structured_catalog": true,
+    "knowledge_import": true,
+    "customer_reply": true,
+    "image_input": true,
+    "jd_url_input": true,
+    "browser_automation": false,
+    "recommendation": false,
+    "rag": false
+  },
+  "reply_policy": {
+    "mode": "conservative",
+    "forbid_unverified_stock_price_and_promises": true
+  }
+}

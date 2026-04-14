@@ -1,0 +1,34 @@
+{
+  "prepared": {
+    "shop_id": "shop_001",
+    "session_id": "sess_001",
+    "source_type": "text",
+    "source_value": "黑色M码",
+    "product_ref": {
+      "type": "product_id",
+      "value": "1001"
+    },
+    "user_message": "这件还有吗？",
+    "page_context": {
+      "input_mode": "text"
+    },
+    "parsed_entities": [],
+    "knowledge_hits": {
+      "catalog": [
+        {
+          "source": "catalog",
+          "field": "title",
+          "value": "黑色外套"
+        }
+      ],
+      "faq": [
+        {
+          "source": "faq",
+          "field": "matched_line",
+          "value": "SKU001 商品发货时效以页面实际展示为准。"
+        }
+      ],
+      "rules": []
+    }
+  }
+}
