@@ -4,6 +4,13 @@ from typing import Any
 
 
 EMPTY_KNOWLEDGE_HITS = {"catalog": [], "faq": [], "rules": []}
+EMPTY_CONSTRAINTS = {
+    "confirmed": [],
+    "candidate": [],
+    "conflicted": [],
+    "missing": [],
+    "forbidden_claims": [],
+}
 
 
 def normalize_string(value: Any) -> str | None:
@@ -32,6 +39,10 @@ def build_prepared_result(
     page_context: dict[str, Any] | None = None,
     parsed_entities: list[dict[str, Any]] | None = None,
     knowledge_hits: dict[str, list[dict[str, Any]]] | None = None,
+    memory_hits: list[dict[str, Any]] | None = None,
+    constraints: dict[str, list[dict[str, Any]]] | None = None,
+    reply_strategy: str | None = None,
+    session_status: str | None = None,
 ) -> dict[str, Any]:
     return {
         "shop_id": shop_id,
@@ -43,6 +54,10 @@ def build_prepared_result(
         "page_context": page_context or {},
         "parsed_entities": parsed_entities or [],
         "knowledge_hits": knowledge_hits or {key: value[:] for key, value in EMPTY_KNOWLEDGE_HITS.items()},
+        "memory_hits": memory_hits or [],
+        "constraints": constraints or {key: value[:] for key, value in EMPTY_CONSTRAINTS.items()},
+        "reply_strategy": reply_strategy,
+        "session_status": session_status,
     }
 
 

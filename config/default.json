@@ -10,6 +10,22 @@
   },
   "supported_product_ref_types": ["sku", "product_id", "url"],
   "supported_source_types": ["text", "url", "image"],
+  "storage_backend": "csv",
+  "storage": {
+    "csv": {
+      "base_dir": "data/memory_store",
+      "retention_days": 7
+    },
+    "postgres": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "ecommerce_customer_workflow",
+      "user": "postgres",
+      "password": "",
+      "retention_days": 7,
+      "enable_pgvector": false
+    }
+  },
   "features": {
     "structured_catalog": true,
     "knowledge_import": true,
@@ -18,7 +34,7 @@
     "jd_url_input": true,
     "browser_automation": false,
     "recommendation": false,
-    "rag": false
+    "rag": true
   },
   "reply_policy": {
     "mode": "conservative",
