@@ -1,0 +1,9 @@
+{
+  "shop_id": "shop_001",
+  "session_id": "sess_001",
+  "product_ref": {
+    "type": "sku",
+    "value": "SKU001"
+  },
+  "user_message": "这件黑色M码还有吗？"
+}
