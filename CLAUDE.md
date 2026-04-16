@@ -103,16 +103,16 @@ structured window probe / UI node inputs
         -> Phase A desktop-assistant flow
 ```
 
-Windows adapter flow:
+UIA stability foundation flow:
 
 ```text
-structured foreground window / normalized automation nodes
-        -> app/desktop/windows_adapter/foreground_window.py
-        -> app/desktop/windows_adapter/ui_node_adapter.py
-        -> app/desktop/windows_adapter/region_input_bridge.py
-        -> app/desktop/windows_adapter/input_focus.py
-        -> app/desktop/windows_adapter/perception_bridge.py
-        -> desktop_context + focus_result
+structured probe inputs / normalized nodes
+        -> app/desktop/windows_uia_foundation/probe_diagnostics.py
+        -> app/desktop/windows_uia_foundation/input_candidate_ranker.py
+        -> app/desktop/windows_uia_foundation/action_gate.py
+        -> app/desktop/windows_uia_foundation/focus_verifier.py
+        -> app/desktop/windows_uia_foundation/diagnostics_report.py
+        -> diagnostics + desktop_context
         -> launcher / reply / fill_action
 ```
 
@@ -127,11 +127,11 @@ structured foreground window / normalized automation nodes
 - `app/data/catalog_loader.py` and `app/data/knowledge_loader.py` load local product, FAQ, and rule data from paths declared in `config/default.json`, then perform simple candidate matching.
 - `app/constraints/constraint_builder.py` merges stored constraints, newly extracted memories, and retrieved memory hits into `confirmed`, `candidate`, `conflicted`, and `missing` groups.
 - `app/reply/reply_builder.py` implements conservative reply strategies: ask for clarification, resolve conflicts, answer with grounded context, or fall back when facts are insufficient.
-- `app/desktop/windows_adapter/foreground_window.py` defines the foreground-window contract for Windows adapter inputs.
-- `app/desktop/windows_adapter/ui_node_adapter.py` normalizes Windows automation nodes into the internal node format.
-- `app/desktop/windows_adapter/region_input_bridge.py` bridges Windows nodes into perception-region inputs.
-- `app/desktop/windows_adapter/input_focus.py` defines safe input-focus result contracts.
-- `app/desktop/windows_adapter/perception_bridge.py` packages probe results, desktop context, and focus results into a unified adapter output.
+- `app/desktop/windows_uia_foundation/probe_diagnostics.py` summarizes window and node statistics for UIA debugging.
+- `app/desktop/windows_uia_foundation/input_candidate_ranker.py` scores candidate input nodes before any action.
+- `app/desktop/windows_uia_foundation/action_gate.py` decides whether focus is allowed, blocked, or requires manual review.
+- `app/desktop/windows_uia_foundation/focus_verifier.py` defines focus verification results.
+- `app/desktop/windows_uia_foundation/diagnostics_report.py` aggregates diagnostics, gate decisions, focus results, and `desktop_context`.
 
 ## Data and Configuration
 
@@ -153,4 +153,5 @@ structured foreground window / normalized automation nodes
 - Phase A desktop assistant accepts an already parsed `desktop_context`; it does not directly capture the screen yet.
 - UI perception currently starts from structured probe results, node lists, and classified region inputs; a live Windows UI Automation backend is not implemented yet.
 - Windows adapter currently starts from structured foreground-window results, normalized automation nodes, and focus-result contracts; a live Windows UI Automation backend is not implemented yet.
+- UIA stability foundation currently supports diagnostics, input candidate scoring, action gating, and focus verification; it does not perform real text fill.
 - Phase A may return a `fill_action`, but `fill_action.auto_send_allowed` must always remain `false`.
