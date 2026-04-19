@@ -41,6 +41,7 @@ metadata:
 - 架构细节：`references/architecture.md`
 - 接入说明：`references/integration.md`
 - 桌面 assistant 示例：`examples/jd_customer_service_start.example.json`
+- 诊断导出脚本：`scripts/jd_customer_service_export_diagnostics.py`
 - 输入样例：`examples/prepare_request.example.json`
 - 回复样例：`examples/generate_reply.example.json`
 - 配置模板：`config/default.json`

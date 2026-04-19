@@ -333,7 +333,29 @@ py -3 scripts/prepare_request.py "{\"shop_id\":\"shop_001\",\"session_id\":\"ses
 py -3 scripts/jd_customer_service_start.py "{\"command\":\"京东客服启动\",\"shop_id\":\"shop_001\",\"session_id\":\"desktop-session-1\",\"desktop_context\":{\"platform\":\"jd_customer_service\",\"confidence\":0.9,\"active_customer\":{\"id\":\"jd_4a3d4c80e30ef\",\"name\":\"jd_4a3d4c80e30ef\"},\"chat_context\":{\"latest_customer_message\":\"这款还有吗？\",\"recent_messages\":[],\"contains_image\":false},\"product_context\":{\"tab_active\":false,\"items\":[]},\"user_order_context\":{\"user_labels\":[],\"orders\":[],\"service_forms\":[]},\"input_context\":{\"editable\":true,\"has_smart_reply\":false,\"send_button_visible\":true,\"existing_text\":\"\"}}}"
 ```
 
-### 6. 测试回复生成
+### 7. 导出老板电脑诊断日志
+
+如果老板电脑没有系统级 Python，但 OpenClaw 能执行本 skill 的 Python 脚本，优先让 OpenClaw 直接调用：
+
+```json
+{"probe_payload":{"backend":{"type":"windows_uia","live":true}}}
+```
+
+对应脚本：
+
+```text
+scripts/jd_customer_service_export_diagnostics.py
+```
+
+输出会包含：
+- `probe_result`
+- `diagnostics_report`
+- `desktop_context`
+- `focus_result`
+
+把完整 JSON 导出结果发回来，就可以继续做京东专用稳定化。
+
+### 8. 测试回复生成
 
 ```bash
 py -3 scripts/generate_reply.py "{\"prepared\":{\"shop_id\":\"shop_001\",\"session_id\":\"sess_001\",\"source_type\":\"text\",\"source_value\":\"黑色M码\",\"product_ref\":{\"type\":\"product_id\",\"value\":\"1001\"},\"user_message\":\"这件还有吗？\",\"page_context\":{},\"parsed_entities\":[],\"knowledge_hits\":{\"catalog\":[{\"source\":\"catalog\",\"field\":\"title\",\"value\":\"黑色外套\"}],\"faq\":[{\"source\":\"faq\",\"field\":\"matched_line\",\"value\":\"SKU001 商品发货时效以页面实际展示为准。\"}],\"rules\":[]}}}"
