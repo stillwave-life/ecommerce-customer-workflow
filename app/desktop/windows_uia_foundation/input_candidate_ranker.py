@@ -11,6 +11,20 @@ def _score_node(node: dict[str, Any]) -> tuple[float, list[str]]:
         score += 0.4
         reasons.append("editable")
 
+    if node.get("visible", True):
+        score += 0.1
+        reasons.append("visible")
+    else:
+        score -= 0.5
+        reasons.append("hidden_penalty")
+
+    if node.get("enabled", True):
+        score += 0.1
+        reasons.append("enabled")
+    else:
+        score -= 0.5
+        reasons.append("disabled_penalty")
+
     bounds = node.get("bounds") or [0, 0, 0, 0]
     top = bounds[1] if len(bounds) >= 2 else 0
     bottom = bounds[3] if len(bounds) >= 4 else 0

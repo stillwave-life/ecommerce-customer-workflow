@@ -20,3 +20,10 @@ def test_build_action_gate_result_requests_manual_review_for_mid_score():
 
     assert result["decision"] == "manual_review"
     assert result["reason"] == "candidate_score_uncertain"
+
+
+def test_build_action_gate_result_blocks_fill_when_focus_not_allowed():
+    result = build_action_gate_result(score=0.49, candidate_count=1)
+
+    assert result["decision"] == "block"
+    assert result["reason"] == "candidate_score_too_low"

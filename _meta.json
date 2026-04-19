@@ -1,6 +1,15 @@
 {
-  "slug": "ecommerce-customer-workflow",
-  "version": "0.2.0",
-  "publishedAt": "2026-04-14T00:00:00Z",
-  "ownerId": "local-placeholder"
+  "name": "ecommerce-customer-workflow",
+  "version": "1.5.0",
+  "description": "京东客服 workflow 与桌面 assistant skill",
+  "runtime": "python",
+  "entrypoints": [
+    "scripts/validate_request.py",
+    "scripts/prepare_request.py",
+    "scripts/generate_reply.py",
+    "scripts/jd_customer_service_start.py"
+  ],
+  "config": {
+    "defaults": "config/default.json"
+  }
 }

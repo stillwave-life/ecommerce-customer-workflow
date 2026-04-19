@@ -9,6 +9,7 @@ def build_diagnostics_report(
     gate_result: dict,
     focus_result: dict,
     desktop_context: dict,
+    backend: dict | None = None,
 ) -> dict:
     return {
         "window": window.copy(),
@@ -17,4 +18,5 @@ def build_diagnostics_report(
         "gate_result": gate_result.copy(),
         "focus_result": focus_result.copy(),
         "desktop_context": desktop_context.copy(),
+        "backend": (backend or {}).copy(),
     }

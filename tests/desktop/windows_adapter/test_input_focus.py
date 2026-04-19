@@ -27,3 +27,17 @@ def test_build_focus_result_reports_failure_reason():
     assert result["ok"] is False
     assert result["focused"] is False
     assert result["reason"] == "input_box_not_found"
+
+
+def test_build_focus_result_keeps_fill_target_metadata():
+    result = build_focus_result(
+        focused=True,
+        target_role="edit",
+        target_name="输入框",
+        reason="",
+        target_bounds=[360, 690, 970, 1010],
+        target_automation_id="reply-editor",
+    )
+
+    assert result["target_bounds"] == [360, 690, 970, 1010]
+    assert result["target_automation_id"] == "reply-editor"

@@ -40,3 +40,15 @@ def test_build_windows_perception_result_keeps_desktop_context_and_focus_result(
     assert result["probe_result"]["handle"] == 1001
     assert result["desktop_context"]["platform"] == "jd_customer_service"
     assert result["focus_result"]["focused"] is True
+
+
+def test_build_windows_perception_result_keeps_diagnostics_and_backend_metadata():
+    result = build_windows_perception_result(
+        probe_result={"handle": 1001},
+        desktop_context={"platform": "jd_customer_service"},
+        focus_result={"focused": True},
+        diagnostics_report={"backend": {"type": "windows_uia", "live": False}},
+    )
+
+    assert result["diagnostics_report"]["backend"]["type"] == "windows_uia"
+    assert result["diagnostics_report"]["backend"]["live"] is False

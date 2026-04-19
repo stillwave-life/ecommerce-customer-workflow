@@ -1,7 +1,7 @@
 {
   "skill_name": "ecommerce-customer-workflow",
-  "version": "0.2.0",
-  "description": "京东客服离线工作流 MVP",
+  "version": "1.5.0",
+  "description": "京东客服离线 workflow 与桌面 assistant skill",
   "platform": "jd",
   "default_data_sources": {
     "catalog": "shops/default/products.csv",
@@ -32,6 +32,9 @@
     "customer_reply": true,
     "image_input": true,
     "jd_url_input": true,
+    "desktop_assistant": true,
+    "windows_uia_probe": false,
+    "windows_uia_live_backend": false,
     "browser_automation": false,
     "recommendation": false,
     "rag": true
@@ -39,5 +42,9 @@
   "reply_policy": {
     "mode": "conservative",
     "forbid_unverified_stock_price_and_promises": true
+  },
+  "desktop_policy": {
+    "manual_send_only": true,
+    "minimum_platform_confidence": 0.7
   }
 }

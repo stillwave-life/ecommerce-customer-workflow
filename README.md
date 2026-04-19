@@ -1,10 +1,10 @@
 # ecommerce-customer-workflow
 
-面向京东客服场景的 OpenClaw 离线 workflow skill MVP。
+面向京东客服场景的 OpenClaw workflow 与桌面 assistant skill。
 
-这个项目的目标是先把“客服代理”的基础工作流做扎实：把文本、京东商品 URL、本地图片路径统一整理成结构化客服上下文，再基于本地商品资料、FAQ、规则生成可审核的中文客服回复草稿。
+这个项目的目标是先把“客服代理”的两条基础链路做扎实：一条是把文本、京东商品 URL、本地图片路径统一整理成结构化客服上下文并生成保守回复草稿；另一条是接收 `desktop_context`，启动京东客服桌面 assistant，生成回复并准备人工发送前的填充动作。
 
-当前版本不是全自动客服机器人，也不会直接操作京东后台。它更像一个安全、可验证、可继续扩展的客服工作流底座。
+当前版本不是全自动客服机器人，也不会自动发送消息。最新主线是 Windows UIA 桌面工作台接入：先把真实窗口和控件树稳定转换为 `desktop_context`，再进入回复与 manual-only 填充链路。
 
 ## 项目定位
 
@@ -15,7 +15,7 @@
 1. 客服输入来源不统一，需要统一成标准 JSON 上下文
 2. 商品资料、FAQ、售后规则散落在不同文件里，需要统一命中和补齐
 3. 客服回复不能瞎编，需要基于已有事实生成保守草稿
-4. 后续要接浏览器、OCR、模型推理，需要先有稳定的数据契约
+4. 后续要接 Windows UIA 桌面工作台，需要先有稳定的数据契约与 manual-only 动作边界
 
 ## 当前整体流程
 
@@ -327,7 +327,13 @@ python3 scripts/prepare_request.py '{"shop_id":"shop_001","session_id":"sess_001
 py -3 scripts/prepare_request.py "{\"shop_id\":\"shop_001\",\"session_id\":\"sess_001\",\"source_type\":\"text\",\"source_value\":\"黑色M码\",\"user_message\":\"这件还有吗？\"}"
 ```
 
-### 5. 测试回复生成
+### 5. 测试桌面 assistant 入口
+
+```bash
+py -3 scripts/jd_customer_service_start.py "{\"command\":\"京东客服启动\",\"shop_id\":\"shop_001\",\"session_id\":\"desktop-session-1\",\"desktop_context\":{\"platform\":\"jd_customer_service\",\"confidence\":0.9,\"active_customer\":{\"id\":\"jd_4a3d4c80e30ef\",\"name\":\"jd_4a3d4c80e30ef\"},\"chat_context\":{\"latest_customer_message\":\"这款还有吗？\",\"recent_messages\":[],\"contains_image\":false},\"product_context\":{\"tab_active\":false,\"items\":[]},\"user_order_context\":{\"user_labels\":[],\"orders\":[],\"service_forms\":[]},\"input_context\":{\"editable\":true,\"has_smart_reply\":false,\"send_button_visible\":true,\"existing_text\":\"\"}}}"
+```
+
+### 6. 测试回复生成
 
 ```bash
 py -3 scripts/generate_reply.py "{\"prepared\":{\"shop_id\":\"shop_001\",\"session_id\":\"sess_001\",\"source_type\":\"text\",\"source_value\":\"黑色M码\",\"product_ref\":{\"type\":\"product_id\",\"value\":\"1001\"},\"user_message\":\"这件还有吗？\",\"page_context\":{},\"parsed_entities\":[],\"knowledge_hits\":{\"catalog\":[{\"source\":\"catalog\",\"field\":\"title\",\"value\":\"黑色外套\"}],\"faq\":[{\"source\":\"faq\",\"field\":\"matched_line\",\"value\":\"SKU001 商品发货时效以页面实际展示为准。\"}],\"rules\":[]}}}"
@@ -475,12 +481,13 @@ shops/default/rules.md
 - 保留规则模板作为兜底
 - 增加事实引用和回复风险检查
 
-### 阶段 4：京东后台半自动执行
+### 阶段 4：Windows UIA 桌面工作台接入
 
-- 使用浏览器自动化读取已登录页面
-- 自动填充回复框
-- 默认不发送
-- 用户显式确认后才发送
+- 读取真实前台窗口
+- 枚举并标准化 Windows UIA 控件树
+- 将控件树转换为 `desktop_context`
+- 通过 diagnostics、candidate ranking、action gate、focus verification 控制风险
+- 只准备 manual-only 填充动作，不自动发送
 
 ### 阶段 5：多平台扩展
 

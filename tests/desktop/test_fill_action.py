@@ -19,3 +19,17 @@ def test_build_fill_action_rejects_empty_text():
     assert action["ok"] is False
     assert action["error"] == "reply text is required"
     assert action["auto_send_allowed"] is False
+
+
+def test_build_fill_action_keeps_focus_target_metadata():
+    action = build_fill_action(
+        "您好，这款需要再确认库存。",
+        target="reply_box",
+        target_bounds=[360, 690, 970, 1010],
+        target_automation_id="reply-editor",
+        verify_mode="readback_required",
+    )
+
+    assert action["target_bounds"] == [360, 690, 970, 1010]
+    assert action["target_automation_id"] == "reply-editor"
+    assert action["verify_mode"] == "readback_required"
