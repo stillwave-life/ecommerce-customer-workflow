@@ -24,3 +24,25 @@ def test_parse_jd_workspace_builds_desktop_context_from_regions():
     assert result["user_order_context"]["user_labels"] == ["PLUS"]
     assert result["input_context"]["editable"] is True
     assert result["input_context"]["send_button_visible"] is True
+
+
+def test_parse_jd_workspace_preserves_product_and_order_context_from_jd_regions():
+    regions = {
+        "chat_region": [{"text": "什么时候发货？", "message_role": "customer"}],
+        "product_region": [{"title": "黑色外套", "sku": "SKU001", "stock_status": "有货"}],
+        "user_order_region": [{"label": "PLUS"}, {"order_summary": "近三个月无订单"}],
+        "input_region": [{"editable": True, "has_smart_reply": False, "existing_text": "已有草稿"}],
+        "send_button_region": [{"visible": True}],
+        "conversation_list_region": [],
+    }
+
+    result = parse_jd_workspace(
+        regions,
+        active_customer={"id": "jd_user_001", "name": "jd_user_001"},
+        confidence=0.95,
+    )
+
+    assert result["product_context"]["tab_active"] is True
+    assert result["product_context"]["items"][0]["title"] == "黑色外套"
+    assert result["user_order_context"]["orders"][0]["summary"] == "近三个月无订单"
+    assert result["input_context"]["existing_text"] == "已有草稿"

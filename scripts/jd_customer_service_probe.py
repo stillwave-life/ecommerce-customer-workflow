@@ -115,6 +115,8 @@ def build_probe_payload(payload: dict[str, Any]) -> dict[str, Any]:
         target_role=str(top_candidate.get("node", {}).get("role", "")) if focus_allowed else "",
         target_name=str(top_candidate.get("node", {}).get("name", "")) if focus_allowed else "",
         reason="" if focus_allowed else gate_result["reason"],
+        target_bounds=top_candidate.get("node", {}).get("bounds") if focus_allowed else [],
+        target_automation_id=str(top_candidate.get("node", {}).get("automation_id", "")) if focus_allowed else "",
     )
     regions = classify_regions(region_nodes)["regions"]
     desktop_context = parse_jd_workspace(regions, active_customer=active_customer, confidence=confidence)

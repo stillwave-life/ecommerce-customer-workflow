@@ -174,3 +174,40 @@ def test_build_region_input_nodes_marks_generic_writable_box_as_input():
 
     assert result[0]["region_hint"] == "input"
     assert result[0]["existing_text"] == "微信草稿"
+
+
+def test_build_region_input_nodes_marks_jd_product_and_user_order_regions():
+    nodes = [
+        {
+            "role": "text",
+            "name": "商品信息",
+            "text": "商品信息",
+            "bounds": [1120, 240, 1540, 460],
+            "editable": False,
+            "clickable": False,
+            "visible": True,
+            "control_type": "Text",
+            "path": ["window", "product_panel"],
+            "children": [],
+            "title": "台式电脑主机",
+            "sku": "10017775551",
+        },
+        {
+            "role": "text",
+            "name": "订单信息",
+            "text": "近三个月无订单",
+            "bounds": [1120, 480, 1540, 720],
+            "editable": False,
+            "clickable": False,
+            "visible": True,
+            "control_type": "Text",
+            "path": ["window", "order_panel"],
+            "children": [],
+            "order_summary": "近三个月无订单",
+        },
+    ]
+
+    result = build_region_input_nodes(nodes)
+
+    assert result[0]["region_hint"] == "product"
+    assert result[1]["region_hint"] == "user_order"
