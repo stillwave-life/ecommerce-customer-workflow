@@ -1,6 +1,6 @@
 ---
 name: ecommerce-customer-workflow
-description: 面向京东客服场景的 OpenClaw workflow 与桌面 assistant skill，支持离线客服上下文整理、保守回复草稿生成，以及京东客服工作台 desktop_context 合同链路。
+description: 面向京东客服场景的 OpenClaw workflow 与桌面 assistant skill，支持离线客服上下文整理、保守回复草稿生成，以及京东客服工作台 desktop_context 合同链路。可选接入 Continuity 上下文压缩。
 metadata:
   openclaw:
     runtime: python
@@ -21,11 +21,13 @@ metadata:
 - 需要把商品资料、FAQ、售后规则、发货规则整理成统一结构
 - 需要生成保守、可审核的中文客服回复草稿
 - 需要以 `desktop_context` 启动京东客服桌面 assistant，生成回复并准备人工发送前的填充动作
+- 需要在外部对话历史较长时调用 Continuity 压缩适配器
 
 ## 当前工作流
 1. 离线 workflow：输入文本 / URL / 图片路径，输出 `prepared` 与 `reply_draft`
 2. 桌面 assistant：输入已解析的 `desktop_context`，输出 `reply` 与 `fill_action`
 3. Windows UIA 主线：下一步把真实窗口与控件树转换为 `desktop_context`
+4. Continuity 适配器：接收外部传入的 history，按阈值调用已安装的 Continuity 压缩能力
 
 ## 当前已实现能力
 - 标准 OpenClaw skill 目录结构
@@ -36,6 +38,7 @@ metadata:
 - 本地图片路径输入与保守解析回退
 - 京东客服桌面 assistant 合同入口 `scripts/jd_customer_service_start.py`
 - UI perception / Windows adapter / Windows UIA stability foundation 合同层
+- Continuity 上下文压缩适配器 `app/continuity_adapter.py`
 
 ## 资源导航
 - 架构细节：`references/architecture.md`
@@ -45,6 +48,7 @@ metadata:
 - 输入样例：`examples/prepare_request.example.json`
 - 回复样例：`examples/generate_reply.example.json`
 - 配置模板：`config/default.json`
+- Continuity 适配器：`app/continuity_adapter.py`
 
 ## 脚本用法
 ```bash
@@ -52,6 +56,16 @@ python3 skills/ecommerce-customer-workflow/scripts/validate_request.py '<JSON>'
 python3 skills/ecommerce-customer-workflow/scripts/prepare_request.py '<JSON>'
 python3 skills/ecommerce-customer-workflow/scripts/generate_reply.py '<JSON>'
 python3 skills/ecommerce-customer-workflow/scripts/jd_customer_service_start.py '<JSON>'
+```
+
+## Continuity 适配器
+
+```python
+from app.continuity_adapter import check_and_compress_context
+
+result = check_and_compress_context(history, max_tokens=200000)
+if result["compressed"]:
+    history = result["history"]
 ```
 
 ## prepare_request 成功输出示例

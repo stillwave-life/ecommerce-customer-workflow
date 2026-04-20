@@ -1,7 +1,7 @@
 {
   "name": "ecommerce-customer-workflow",
-  "version": "1.5.0",
-  "description": "京东客服 workflow 与桌面 assistant skill",
+  "version": "1.6.0",
+  "description": "京东客服 workflow 与桌面 assistant skill，集成 Continuity 上下文压缩",
   "runtime": "python",
   "entrypoints": [
     "scripts/validate_request.py",
@@ -11,5 +11,11 @@
   ],
   "config": {
     "defaults": "config/default.json"
+  },
+  "integrations": {
+    "continuity": {
+      "enabled": true,
+      "adapter": "app/continuity_adapter.py"
+    }
   }
 }
