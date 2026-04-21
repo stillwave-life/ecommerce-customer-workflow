@@ -2,9 +2,12 @@
 
 面向京东客服场景的 OpenClaw workflow 与桌面 assistant skill。
 
-这个项目的目标是先把“客服代理”的两条基础链路做扎实：一条是把文本、京东商品 URL、本地图片路径统一整理成结构化客服上下文并生成保守回复草稿；另一条是接收 `desktop_context`，启动京东客服桌面 assistant，生成回复并准备人工发送前的填充动作。
+这个项目的目标是先把“客服代理”的三条基础链路做扎实：
+1. 把文本、京东商品 URL、本地图片路径统一整理成结构化客服上下文并生成保守回复草稿。
+2. 接收 `desktop_context`，启动京东客服桌面 assistant，生成回复并准备人工发送前的填充动作。
+3. 在管理员环境中，通过普通 `AutoHotkey64.exe` 调用本地 AHK 执行器，把生成的回复填入当前打开的京东咚咚窗口。
 
-当前版本不是全自动客服机器人，也不会自动发送消息。最新主线是 Windows UIA 桌面工作台接入：先把真实窗口和控件树稳定转换为 `desktop_context`，再进入回复与 manual-only 填充链路。
+当前版本不是全自动客服机器人，也不会自动发送消息。最新可运行主线是：输入客户问题文本 → 生成保守回复 → 以管理员权限调用 AHK 执行填充 → 人工确认发送。
 
 ## 项目定位
 
@@ -12,32 +15,29 @@
 
 它当前解决的问题是：
 
-1. 客服输入来源不统一，需要统一成标准 JSON 上下文
-2. 商品资料、FAQ、售后规则散落在不同文件里，需要统一命中和补齐
-3. 客服回复不能瞎编，需要基于已有事实生成保守草稿
-4. 后续要接 Windows UIA 桌面工作台，需要先有稳定的数据契约与 manual-only 动作边界
+1. 客服输入来源不统一，需要统一成标准 JSON 上下文。
+2. 商品资料、FAQ、售后规则散落在不同文件里，需要统一命中和补齐。
+3. 客服回复不能瞎编，需要基于已有事实生成保守草稿。
+4. 京东桌面工作台是封闭 CEF 界面，普通外部注入不稳定，需要通过管理员环境下的 AHK 本地执行器完成填充。
 
-## 当前整体流程
+## 当前推荐主流程
 
 ```text
-文本 / 京东商品 URL / 本地图片路径
+客户问题文本
         │
         ▼
-scripts/prepare_request.py
+scripts/jd_generate_reply_and_fill_ahk.py
         │
-        ├─ URL 解析：提取京东商品 ID
-        ├─ 图片解析：校验本地图片路径，预留 OCR 扩展
-        ├─ 文本输入：直接归一化
-        └─ 本地知识补齐：catalog / FAQ / rules
-        │
-        ▼
-统一 prepared 结构
-        │
-        ▼
-scripts/generate_reply.py
-        │
-        ▼
-可审核中文客服回复草稿
+        ├─ 构造最小 desktop_context
+        ├─ launch_desktop_assistant
+        ├─ 生成 reply_draft
+        └─ fill_with_ahk
+                │
+                ▼
+管理员环境下 AHK 自动填充京东输入框
+                │
+                ▼
+人工确认发送
 ```
 
 ## 已实现能力
@@ -59,205 +59,112 @@ scripts/generate_reply.py
 
 可以作为一个独立 skill 包复制到 OpenClaw 的 `skills` 目录中。
 
-### 2. 最小请求校验
+### 2. 最小请求校验与离线准备
 
 入口：
 
 ```text
 scripts/validate_request.py
-```
-
-用于兼容原始最小输入契约：
-
-```json
-{
-  "shop_id": "shop_001",
-  "session_id": "sess_001",
-  "product_ref": {
-    "type": "sku",
-    "value": "SKU001"
-  },
-  "user_message": "这件黑色M码还有吗？"
-}
-```
-
-### 3. 离线请求准备
-
-入口：
-
-```text
 scripts/prepare_request.py
-```
-
-支持三类输入：
-
-- `text`：纯文本
-- `url`：京东商品 URL
-- `image`：本地图片路径
-
-输出统一结构：
-
-```json
-{
-  "ok": true,
-  "prepared": {
-    "shop_id": "shop_001",
-    "session_id": "sess_001",
-    "source_type": "url",
-    "source_value": "https://item.jd.com/1001.html",
-    "product_ref": {
-      "type": "product_id",
-      "value": "1001"
-    },
-    "user_message": "这款还有吗？",
-    "page_context": {},
-    "parsed_entities": [],
-    "knowledge_hits": {
-      "catalog": [],
-      "faq": [],
-      "rules": []
-    }
-  },
-  "action_plan": [
-    "review_prepared_request",
-    "generate_reply"
-  ]
-}
-```
-
-### 4. 京东商品 URL 最小识别
-
-模块：
-
-```text
-app/parsers/url_parser.py
-```
-
-当前支持类似：
-
-```text
-https://item.jd.com/1001.html
-```
-
-会提取：
-
-```json
-{
-  "type": "product_id",
-  "value": "1001"
-}
-```
-
-当前不会做：
-
-- 页面抓取
-- 登录态读取
-- 反爬绕过
-- 价格 / 库存实时查询
-
-### 5. 本地图片路径输入
-
-模块：
-
-```text
-app/parsers/image_parser.py
-```
-
-当前实现的是保守 MVP：
-
-- 校验图片路径是否存在
-- 输出文件名、路径、后缀等结构化上下文
-- 预留 OCR 扩展点
-- 如果没有 OCR 结果，不会编造商品信息
-
-后续可以在这里接入 OCR 或多模态识别。
-
-### 6. 本地知识补齐
-
-模块：
-
-```text
-app/data/catalog_loader.py
-app/data/knowledge_loader.py
-```
-
-默认数据源：
-
-```text
-shops/default/products.csv
-shops/default/faq.md
-shops/default/rules.md
-```
-
-当前支持：
-
-- 读取商品 CSV
-- 读取 FAQ 文本
-- 读取 rules 文本
-- 根据商品 ID、SKU、实体候选进行简单命中
-- 返回结构化 `knowledge_hits`
-
-### 7. 客服回复草稿生成
-
-入口：
-
-```text
 scripts/generate_reply.py
 ```
 
-模块：
+支持：
+- `text`
+- `url`
+- `image`
+
+输出统一的 `prepared` 结构与保守回复草稿。
+
+### 3. 桌面 assistant 合同链路
+
+入口：
 
 ```text
-app/reply/reply_builder.py
+scripts/jd_customer_service_start.py
 ```
 
-当前是规则模板生成，不依赖外部模型。
+作用：
+- 接收 `desktop_context`
+- 生成 `reply`
+- 生成 `fill_action`
+- 始终保持：
+  - `send_policy = manual_only`
+  - `auto_send_allowed = false`
 
-生成原则：
+### 4. AHK 自动填充入口
 
-- 只使用 `knowledge_hits` 中已经确认的事实
-- 缺少事实时输出保守澄清回复
-- 不编造库存
-- 不编造价格
-- 不编造发货承诺
-- 不编造平台规则
-- 不编造售后承诺
-
-示例输出：
-
-```json
-{
-  "ok": true,
-  "reply_draft": "您好，结合当前可确认的信息，先为您整理如下：...",
-  "reply_reasoning_summary": "基于本地商品/FAQ/规则命中结果生成保守回复草稿",
-  "facts_used": [
-    "catalog:title",
-    "faq:matched_line"
-  ]
-}
-```
-
-## 目录结构
+核心脚本：
 
 ```text
-ecommerce-customer-workflow/
-├─ SKILL.md
-├─ _meta.json
-├─ app/
-│  ├─ models.py
-│  ├─ data/
-│  │  ├─ catalog_loader.py
-│  │  └─ knowledge_loader.py
-│  ├─ parsers/
-│  │  ├─ image_parser.py
-│  │  └─ url_parser.py
-│  └─ reply/
-│     └─ reply_builder.py
-├─ assets/
-│  ├─ reply_prompt.txt
-│  └─ request.example.json
-├─ config/
-│  └─ default.json
+scripts/jd_fill_with_ahk.py
+scripts/jd_generate_reply_and_fill_ahk.py
+scripts/jd_force_paste_ahk.ahk
+```
+
+当前约束：
+- 必须在管理员 PowerShell 中运行
+- 默认使用：
+  - `C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe`
+- 不自动发送
+- 通过诊断目录输出截图与 run.json
+- `ok=true` / `executed=true` 仅表示链路执行完成，不代表视觉确认已填入；需结合 `after_input.png` 人工确认
+
+### 5. AHK 诊断证据链
+
+每次运行会输出：
+- `diagnostics_path`
+- `before_full.png`
+- `after_full.png`
+- `after_input.png`
+- `run.json`
+
+用于人工确认输入框是否真正出现目标文本。
+
+## 常用命令
+
+### 离线回复
+
+```bash
+python scripts/prepare_request.py '{"shop_id":"shop_001","session_id":"sess_001","source_type":"text","source_value":"黑色M码","user_message":"这件还有吗？"}'
+python scripts/generate_reply.py '{"prepared":{"shop_id":"shop_001","session_id":"sess_001","source_type":"text","source_value":"黑色M码","product_ref":{"type":"product_id","value":"1001"},"user_message":"这件还有吗？","page_context":{},"parsed_entities":[],"knowledge_hits":{"catalog":[],"faq":[],"rules":[]}}}'
+```
+
+### 桌面 assistant 合同入口
+
+```bash
+python scripts/jd_customer_service_start.py '{"command":"京东客服启动","shop_id":"shop_001","session_id":"desktop-session-1","desktop_context":{"platform":"jd_customer_service","confidence":0.9,"active_customer":{"id":"manual_user","name":"manual_user"},"chat_context":{"latest_customer_message":"这款还有吗？","recent_messages":[],"contains_image":false},"product_context":{"tab_active":false,"items":[]},"user_order_context":{"user_labels":[],"orders":[],"service_forms":[]},"input_context":{"editable":true,"has_smart_reply":false,"send_button_visible":true,"existing_text":""}}}'
+```
+
+### 管理员环境下直接 AHK 填充
+
+```powershell
+python scripts/jd_fill_with_ahk.py "测试填充123"
+```
+
+### 管理员环境下生成回复并填充
+
+```powershell
+python scripts/jd_generate_reply_and_fill_ahk.py "这款还有吗？"
+```
+
+## 演示与验收口径
+
+- `ahk_executed=true`：Python/AHK 链路执行完成。
+- `fill_visually_confirmed=false`：未经过截图或人工确认，不声称填充成功。
+- 需要查看：
+  - `after_input.png`
+  - `after_full.png`
+- 发送始终保留人工确认，不做自动发送。
+
+## 当前未实现项
+
+- 自动发送客服消息
+- 稳定的京东页面 OCR 主链路
+- 直接 DOM / DevTools 接入
+- 淘宝支持
+- 实时联网抓取商品详情
+- 完整 RAG
 ├─ docs/
 │  └─ plans/
 ├─ examples/

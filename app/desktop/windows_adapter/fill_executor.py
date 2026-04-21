@@ -9,6 +9,10 @@ def build_fill_execution_result(
     written_text: str,
     verify_mode: str,
     reason: str,
+    verification_method: str = "",
+    diff_score: float | None = None,
+    diff_passed: bool | None = None,
+    diagnostics_path: str = "",
 ) -> dict:
     return {
         "ok": executed and verified,
@@ -18,4 +22,8 @@ def build_fill_execution_result(
         "written_text": written_text,
         "verify_mode": verify_mode,
         "reason": reason,
+        "verification_method": verification_method,
+        "diff_score": diff_score,
+        "diff_passed": diff_passed,
+        "diagnostics_path": diagnostics_path,
     }

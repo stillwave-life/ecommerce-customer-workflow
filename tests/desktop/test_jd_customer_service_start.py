@@ -49,6 +49,58 @@ def test_jd_customer_service_start_accepts_desktop_context_payload():
     assert response["ok"] is True
     assert response["fill_action"]["send_policy"] == "manual_only"
     assert response["fill_action"]["auto_send_allowed"] is False
+    assert response["right_panel_actions"]
+    assert {action["name"] for action in response["right_panel_actions"]} >= {
+        "view_product",
+        "view_order",
+        "view_service_form",
+        "switch_right_tab_product",
+        "switch_right_tab_order",
+        "switch_right_tab_service",
+    }
+
+
+def test_jd_customer_service_start_accepts_latest_customer_message_override():
+    payload = {
+        "command": "京东客服启动",
+        "shop_id": "shop_001",
+        "session_id": "desktop-session-2",
+        "latest_customer_message": "这件黑色M码还有吗？",
+        "desktop_context": {
+            "platform": "jd_customer_service",
+            "confidence": 0.9,
+            "active_customer": {"id": "jd_user", "name": "jd_user"},
+            "chat_context": {
+                "latest_customer_message": "",
+                "recent_messages": [],
+                "contains_image": False,
+            },
+            "product_context": {"tab_active": False, "items": [{"sku": "SKU001"}]},
+            "user_order_context": {"user_labels": [], "orders": [], "service_forms": []},
+            "input_context": {
+                "editable": True,
+                "has_smart_reply": False,
+                "send_button_visible": True,
+                "existing_text": "",
+            },
+        },
+    }
+
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), json.dumps(payload, ensure_ascii=False)],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="strict",
+        check=False,
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+    )
+
+    assert result.returncode == 0
+    response = json.loads(result.stdout)
+    assert response["ok"] is True
+    assert response["reply"]["prepared"]["user_message"] == "这件黑色M码还有吗？"
+    assert response["reply"]["ui_context_summary"]
 
 
 def test_jd_customer_service_start_rejects_missing_context():

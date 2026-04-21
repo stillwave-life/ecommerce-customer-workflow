@@ -1,4 +1,4 @@
-from app.desktop.fill_action import build_fill_action
+from app.desktop.fill_action import DEFAULT_INPUT_BOUNDS, build_fill_action
 
 
 def test_build_fill_action_requires_manual_send():
@@ -11,6 +11,11 @@ def test_build_fill_action_requires_manual_send():
     assert action["send_policy"] == "manual_only"
     assert action["ready_for_manual_send"] is True
     assert action["auto_send_allowed"] is False
+    assert action["targeting_strategy"] == "coordinates"
+    assert action["paste_via_clipboard"] is True
+    assert action["clear_before_fill"] is True
+    assert action["verify_mode"] == "screenshot_diff_required"
+    assert action["target_bounds"] == DEFAULT_INPUT_BOUNDS
 
 
 def test_build_fill_action_rejects_empty_text():

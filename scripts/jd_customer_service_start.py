@@ -50,6 +50,7 @@ def main() -> None:
             desktop_context=desktop_context,
             shop_id=str(payload.get("shop_id", "jd-default")),
             session_id=str(payload.get("session_id", "desktop-session")),
+            latest_customer_message=str(payload.get("latest_customer_message", "")).strip() or None,
         )
     )
 
